@@ -1,0 +1,11 @@
+#+TITLE: emacs-nm
+
+
+* Run ERT unit tests
+
+
+To run the ERT tests run the command in the box below. Functions with ~interactive~ is not tested.
+
+#+BEGIN_SRC bash
+emacs -batch -l ert -l nm.tests.el -f ert-run-tests-batch-and-exit
+#+END_SRC
