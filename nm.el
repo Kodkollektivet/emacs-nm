@@ -43,15 +43,16 @@
 (defun nm/show-aps-list ()
   "List WiFi APs with detailed info in a temp buffer."
   (interactive)
-    (with-temp-buffer-window "*list-wifi-aps*" (temp-buffer-resize-mode)
-      (princ (nm/return-nmcli-output "aps-details"))))
+  (with-temp-buffer
+   (princ (nm/return-nmcli-output "aps-details"))))
+
 
 
 (defun nm/show-active-connections-profiles ()
   "Show nm profiles that are active."
   (interactive)
-  (with-temp-buffer-window "*list-wifi-aps*" (temp-buffer-resize-mode)
-                           (princ (nm/return-nmcli-output "active-profile-details"))))
+  (with-temp-buffer
+    (princ (nm/return-nmcli-output "active-profile-details"))))
 
 
 (defun nm/connect-to-wifi-network (network password)
@@ -67,5 +68,6 @@ This will create a NetworkManager profile with the SSID as the profile NAME."
     (let ((output (shell-command-to-string (format "%s" fstr))))
       (message (format output)))))
 
-            
+
+(provide 'nm)  ; Makes able to '(require 'nm)' in init.el
 
