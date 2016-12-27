@@ -1,23 +1,17 @@
+(provide 'nm)
+
 (defun nm/remove-trailing-spaces (stringlist)
   "Remove trailing spaces from the list"
   (message (format "%s" stringlist))
   (mapcar (lambda (x) (replace-regexp-in-string " +$" "" x)) stringlist))
 
 
-(defun nm/split-and-fix-nm-output (st)
-  "Split up and fix nmcli output"
-  (remove ""
-          (nm/remove-trailing-spaces
-           (cdr
-            (split-string st "\n")))))
-
-
 (defun nm/return-nmcli-output (arg)
   "Return nmcli output that is parsed and good looking."
   (cond
    ((equal "active-profiles" arg)
-    (nm/split-and-fix-nm-output (shell-command-to-string
-                                 "nmcli -f NAME connection show --active")))
+    (split-string (shell-command-to-string
+                                 "nmcli -t -f NAME connection show --active") "\n" t " +"))
    
    ((equal "active-profile-details" arg)
     (let* ((output (shell-command-to-string "nmcli connection show --active"))
@@ -26,8 +20,8 @@
     
    ((equal "profiles" arg)
     ;; All profiles
-    (nm/split-and-fix-nm-output (shell-command-to-string
-                                 "nmcli -f NAME connection show")))
+    (split-string (shell-command-to-string
+                   "nmcli -t -f NAME connection show") "\n" t " +"))
    ((equal "aps-details" arg)
     ;; Connection details
     (let* ((output (shell-command-to-string "nmcli -f SSID,SIGNAL,SECURITY,CHAN,ACTIVE,BSSID device wifi list"))
@@ -36,8 +30,8 @@
 
    ((equal "aps" arg)
     ;; Available WiFi APs
-    (nm/split-and-fix-nm-output (shell-command-to-string
-                                 "nmcli -f SSID device wifi")))))
+    (split-string (shell-command-to-string
+                   "nmcli -t -f SSID device wifi") "\n" t " +"))))
 
 
 (defun nm/show-aps-list ()
@@ -67,7 +61,3 @@ This will create a NetworkManager profile with the SSID as the profile NAME."
   (let* ((fstr (format "nmcli device wifi connect %s password %s" network password)))
     (let ((output (shell-command-to-string (format "%s" fstr))))
       (message (format output)))))
-
-
-(provide 'nm)  ; Makes able to '(require 'nm)' in init.el
-

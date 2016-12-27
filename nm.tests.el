@@ -12,8 +12,3 @@
   (should (equal (nm/remove-trailing-spaces '("a   " "b    ")) '("a" "b")))
   (should (equal (nm/remove-trailing-spaces '("a   " "b    ")) '("a" "b")))
   (should (equal (nm/remove-trailing-spaces '("Nu ska vi se   " "b    ")) '("Nu ska vi se" "b"))))
-
-
-(ert-deftest ert-test-split-and-fix-nm-output ()
-  "Test nm output"
-  (should (equal (nm/split-and-fix-nm-output "a\nb") '("b"))))
