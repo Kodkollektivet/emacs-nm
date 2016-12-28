@@ -85,6 +85,14 @@ This will create a NetworkManager profile with the SSID as the profile NAME."
     (let ((output (shell-command-to-string (format "%s" fstr))))
       (message (format output)))))
 
+(defun nm/connect-with-profile ()
+  "Activate connection using existing profile configuration."
+  (interactive)
+  (let ((config (completing-read
+                 "Profile: " (nm/return-nmcli-output "profiles"))))
+    (shell-command-to-string (format "nmcli connection up id %s" config))
+    (message (format "Connected to '%s'" config))))
+
 (defun nm/wifi-status ()
   "Show connectivity information in minibuffer."
   (interactive)
