@@ -1,23 +1,45 @@
+(provide 'nm)
+
+(defvar iface "wlp3s0"
+  "Default interface.")
+
 (defun nm/remove-trailing-spaces (stringlist)
   "Remove trailing spaces from the list"
   (message (format "%s" stringlist))
   (mapcar (lambda (x) (replace-regexp-in-string " +$" "" x)) stringlist))
 
+(defun nm/set-interface ()
+  "Set default interface."
+  (interactive)
+  (let* ((msg (format "WLAN interface (currently '%s'): " iface))
+         (interface (read-string msg nil nil iface)))
+    (setq iface interface)
+    (message (format "WLAN interface set to: %s" iface))))
 
-(defun nm/split-and-fix-nm-output (st)
-  "Split up and fix nmcli output"
-  (remove ""
-          (nm/remove-trailing-spaces
-           (cdr
-            (split-string st "\n")))))
+(defun nm/filter-interface-list (iface-list-complete)
+  "Return a list of device names as seen by nmcli."
+  (let ((iface-names '()))
+    (mapc #'(lambda (iface)
+              (push
+               (substring (car (split-string iface "\n")) 40 nil)
+               iface-names))
+          iface-list-complete)
+    iface-names))
 
+(defun nm/set-interface-ac ()
+  "Lists and sets available nmcli interfaces with autocomplete."
+  (interactive)
+  (let* ((output (shell-command-to-string "nmcli device show"))
+         (iface-names (nm/filter-interface-list
+                       (split-string output "\n\n"))))
+    (setq iface (completing-read "WLAN interface: " iface-names nil t))))
 
 (defun nm/return-nmcli-output (arg)
   "Return nmcli output that is parsed and good looking."
   (cond
    ((equal "active-profiles" arg)
-    (nm/split-and-fix-nm-output (shell-command-to-string
-                                 "nmcli -f NAME connection show --active")))
+    (split-string (shell-command-to-string
+                                 "nmcli -t -f NAME connection show --active") "\n" t " +"))
    
    ((equal "active-profile-details" arg)
     (let* ((output (shell-command-to-string "nmcli connection show --active"))
@@ -26,8 +48,8 @@
     
    ((equal "profiles" arg)
     ;; All profiles
-    (nm/split-and-fix-nm-output (shell-command-to-string
-                                 "nmcli -f NAME connection show")))
+    (split-string (shell-command-to-string
+                   "nmcli -t -f NAME connection show") "\n" t " +"))
    ((equal "aps-details" arg)
     ;; Connection details
     (let* ((output (shell-command-to-string "nmcli -f SSID,SIGNAL,SECURITY,CHAN,ACTIVE,BSSID device wifi list"))
@@ -36,9 +58,8 @@
 
    ((equal "aps" arg)
     ;; Available WiFi APs
-    (nm/split-and-fix-nm-output (shell-command-to-string
-                                 "nmcli -f SSID device wifi")))))
-
+    (split-string (shell-command-to-string
+                   "nmcli -t -f SSID device wifi") "\n" t " +"))))
 
 (defun nm/show-aps-list ()
   "List WiFi APs with detailed info in a temp buffer."
@@ -46,20 +67,16 @@
   (with-temp-buffer
    (princ (nm/return-nmcli-output "aps-details"))))
 
-
-
 (defun nm/show-active-connections-profiles ()
   "Show nm profiles that are active."
   (interactive)
   (with-temp-buffer
     (princ (nm/return-nmcli-output "active-profile-details"))))
 
-
 (defun nm/connect-to-wifi-network (network password)
   "Connect to a Wifi network and create NetworkManager profile.
 
-This will create a NetworkManager profile with the SSID as the profile NAME."
-  
+This will create a NetworkManager profile with the SSID as the profile NAME."  
   (interactive
    (list
     (completing-read "Network: " (nm/return-nmcli-output "aps"))
@@ -68,6 +85,31 @@ This will create a NetworkManager profile with the SSID as the profile NAME."
     (let ((output (shell-command-to-string (format "%s" fstr))))
       (message (format output)))))
 
+(defun nm/connect-with-profile ()
+  "Activate connection using existing profile configuration."
+  (interactive)
+  (let ((config (completing-read
+                 "Profile: " (nm/return-nmcli-output "profiles"))))
+    (shell-command-to-string (format "nmcli connection up id %s" config))
+    (message (format "Connected to '%s'" config))))
 
-(provide 'nm)  ; Makes able to '(require 'nm)' in init.el
+(defun nm/wifi-status ()
+  "Show connectivity information in minibuffer."
+  (interactive)
+  (message
+   (shell-command-to-string "nmcli -f state,connectivity,wifi g")))
 
+(defun nm/toggle-wifi ()
+  "Toggle wifi up/down."
+  (interactive)
+  (if (nm/wifi-enabled-p)
+      (shell-command-to-string "nmcli radio wifi off")
+    (shell-command-to-string "nmcli radio wifi on")))
+
+(defun nm/wifi-enabled-p ()
+  "True if wifi is enabled according to NetworkManager."
+  (interactive)
+  (let ((status (nth 1 (split-string
+                        (shell-command-to-string "nmcli -f wifi g")
+                        "\n" t " "))))
+    (equal status "enabled")))
