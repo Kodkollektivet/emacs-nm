@@ -14,7 +14,7 @@
   (let* ((msg (format "WLAN interface (currently '%s'): " iface))
          (interface (read-string msg nil nil iface)))
     (setq iface interface)
-    (message (format "WLAN interface set to: %s" interface))))
+    (message (format "WLAN interface set to: %s" iface))))
 
 (defun nm/filter-interface-list (iface-list-complete)
   "Return a list of device names as seen by nmcli."
@@ -84,3 +84,24 @@ This will create a NetworkManager profile with the SSID as the profile NAME."
   (let* ((fstr (format "nmcli device wifi connect %s password %s" network password)))
     (let ((output (shell-command-to-string (format "%s" fstr))))
       (message (format output)))))
+
+(defun nm/wifi-status ()
+  "Show connectivity information in minibuffer."
+  (interactive)
+  (message
+   (shell-command-to-string "nmcli -f state,connectivity,wifi g")))
+
+(defun nm/toggle-wifi ()
+  "Toggle wifi up/down."
+  (interactive)
+  (if (nm/wifi-enabled-p)
+      (shell-command-to-string "nmcli radio wifi off")
+    (shell-command-to-string "nmcli radio wifi on")))
+
+(defun nm/wifi-enabled-p ()
+  "True if wifi is enabled according to NetworkManager."
+  (interactive)
+  (let ((status (nth 1 (split-string
+                        (shell-command-to-string "nmcli -f wifi g")
+                        "\n" t " "))))
+    (equal status "enabled")))
