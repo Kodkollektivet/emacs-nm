@@ -47,15 +47,35 @@
     (split-string (shell-command-to-string
                    "nmcli -t -f SSID device wifi") "\n" t " +"))))
 
-(defun nm/find-vpn-profiles ()
-  "Find VPN profiles.
+(defun nm/find-profiles-by-type (type &optional active)
+  "Find profiles by type.
 
-This maybe should be within 'nm/return-nmcli-output'?"
+TYPE:
+  Select the type of profile type you wanna have:
+  - vpn, VPN profiles
+  - 802-11-wireless, WiFi profiles
+  - bridge, bridge profiles
+  - tun, tunnel profiles
+
+ACTIVE:
+  If active set to 't' only active profiles will be evaluated.
+
+Example:
+  Show all WiFi profiles:
+    (nm/find-profiles-by-type \"802-11-wireless\")
+  Show only active WiFi profiles:
+    (nm/find-profiles-by-type \"802-11-wireless\" t)
+  Show active VPN profiles:
+    (nm/find-profiles-by-type \"vpn\" t)"
   (let* (( two-dim-list
-           (mapcar (lambda (x) (split-string x ":")) (split-string (shell-command-to-string
-                               "nmcli -t -f TYPE,NAME connection show")))))
+           (mapcar (lambda (x) (split-string x ":"))
+                   (split-string
+                    (shell-command-to-string
+                     (if active
+                         (format "nmcli -t -f TYPE,NAME connection show --active")
+                       (format "nmcli -t -f TYPE,NAME connection show")))))))
     (mapcar (lambda (x)
-              (nth 1 x))(remove nil(mapcar (lambda (x) (if (equal (nth 0 x) "vpn") x)) two-dim-list )))))
+              (nth 1 x))(remove nil(mapcar (lambda (x) (if (equal (nth 0 x) type) x)) two-dim-list )))))
 
 (defun nm/set-interface ()
   "Lists and sets available nmcli interfaces with autocomplete.
@@ -68,7 +88,7 @@ Asks to set a VPN profile."
     (setq iface (completing-read "Select WLAN interface: " iface-names nil t)))
   (if (yes-or-no-p "Set VPN profile?")
       (setq nmvar/vpn-profile (completing-read "Select VPN profile: "
-                                         (nm/find-vpn-profiles) nil 'confirm))))
+                                         (nm/find-profiles-by-type "vpn") nil 'confirm))))
 
 (defun nm/show-aps-list ()
   "List WiFi APs with detailed info in a temp buffer."
@@ -87,7 +107,7 @@ Asks to set a VPN profile."
   (interactive)
   (if (equal nmvar/vpn-profile nil)
       (nm/set-interface))
-  (let* ((vpn (completing-read "Select VPN profile: " (nm/find-vpn-profiles))))
+  (let* ((vpn (completing-read "Select VPN profile: " (nm/find-profiles-by-type "vpn"))))
     (setq nmvar/vpn-profile vpn)
     (shell-command-to-string (format "nmcli connection up id %s" vpn))))
 
@@ -102,7 +122,7 @@ This will create a NetworkManager profile with the SSID as the profile NAME."
   (let* ((fstr (format "nmcli device wifi connect %s password %s" network password)))
     (let ((output (shell-command-to-string (format "%s" fstr))))
       (message (format output))))
-  (if (yes-or-no-p "Connect a VPN?")
+  (if (yes-or-no-p "Connect a VPN profile?")
       (nm/connect-vpn-profile)))
 
 (defun nm/connect-with-profile ()
