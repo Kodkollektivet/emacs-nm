@@ -9,7 +9,6 @@
 (defun nm/cmd (args &optional split)
   "Calls the networkmanager cli interface with the provided
 arguments and splits it if 'split' is non-nil."
-  (interactive)
   (let* ((cmd (concat "nmcli " args))
          (output (shell-command-to-string cmd)))
     (if split
