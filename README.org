@@ -1,6 +1,6 @@
 #+TITLE: emacs-nm
 
-* Progress [66%]                                                   :PROGRESS:
+* Progress [57%]                                                   :PROGRESS:
   - [X] Set WiFi interface
     - [X] List WiFi Interfaces
     - [X] Filter out device names
@@ -21,16 +21,16 @@ To see all available networking commands, issue
 and select an item from the list of autocomplete options.
 
 ** Examples
-| command                                 | description                                      |
-|-----------------------------------------+--------------------------------------------------|
-| M-x nm/show-aps-list                    | List available access points                     |
-| M-x nm/show-wifi-status                 | Show WiFi status                                 |
-| M-x nm/show-active-connection-profiles  | Show the active profiles                         |
-|-----------------------------------------+--------------------------------------------------|
-| M-x nm/set-interface                    | Set default interface (and VPN)                  |
-| M-x nm/connect-to-wifi-network          | Connect to a new network                         |
-| M-x nm/connect-with-profile             | Connect to an already configured network profile |
-| M-x nm/connect-vpn-profile              | Connect to an already configured VPN profile     |
+| command                    | description                                                |
+|----------------------------+------------------------------------------------------------|
+| nm/list-access-points      | List available access points                               |
+| nm/list-active-connections | Show the active profiles                                   |
+| nm/show-wifi-status        | Show WiFi status                                           |
+|----------------------------+------------------------------------------------------------|
+| nm/set-interface           | Set default interface (and VPN)                            |
+| nm/connect-basic           | Connect to a new network                                   |
+| nm/connect-with-profile    | Connect to wifi with an already configured network profile |
+| nm/connect-vpn-profile     | Connect to VPN with an already configured VPN profile      |
 
 * Run ERT unit tests
 
