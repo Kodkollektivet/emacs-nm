@@ -93,7 +93,7 @@ Asks to set a VPN profile."
 This will create a NetworkManager profile with the SSID as the profile NAME."
   (interactive
    (list (completing-read "Network: " (nm/cmd "-t -f SSID device wifi" t))
-         (read-string "Password: ")))
+         (password-read "Password: ")))
   (let* ((fstr (format "device wifi connect %s password %s" network password))
          (output (nm/cmd fstr)))
     (message output)
